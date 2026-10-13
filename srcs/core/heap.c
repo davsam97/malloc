@@ -3,21 +3,32 @@
 #include "utils/utils.h"
 #include "zone/zone.h"
 
+// mmap only aligns on pages: align - ALIGNMENT bytes of slack let the
+// payload be shifted to a larger alignment
 static t_block	*alloc_large(size_t size, size_t align)
 {
-	size_t	offset;
+	size_t	header;
 	size_t	total;
+	size_t	data;
 	t_zone	*zone;
+	t_block	*block;
 
-	offset = align_up(sizeof(t_zone) + sizeof(t_block), align)
-		- sizeof(t_block);
-	if (size > SIZE_MAX - offset - sizeof(t_block) - g_heap.page_size)
+	if (align > SIZE_MAX / 4)
 		return (NULL);
-	total = align_up(offset + sizeof(t_block) + size, g_heap.page_size);
-	zone = zone_new(LARGE, total, offset);
+	header = align_up(sizeof(t_zone) + sizeof(t_block), ALIGNMENT)
+		+ align - ALIGNMENT;
+	if (size > SIZE_MAX - header - g_heap.page_size)
+		return (NULL);
+	total = align_up(header + size, g_heap.page_size);
+	zone = zone_new(LARGE, total);
 	if (!zone)
 		return (NULL);
-	return (zone->blocks);
+	data = align_up((size_t)zone + sizeof(t_zone) + sizeof(t_block), align);
+	block = (t_block *)(data - sizeof(t_block));
+	block->size = (size_t)zone + total - data;
+	block->next = NULL;
+	zone->blocks = block;
+	return (block);
 }
 
 static t_block	*alloc_small(t_type type, size_t size)
@@ -27,10 +38,14 @@ static t_block	*alloc_small(t_type type, size_t size)
 
 	block = block_find_free(type, size);
 	if (block)
+	{
+		if (g_heap.spare[type] && g_heap.spare[type]->blocks == block)
+			g_heap.spare[type] = NULL;
 		freelist_remove(block, type);
+	}
 	else
 	{
-		zone = zone_new(type, zone_capacity(type), sizeof(t_zone));
+		zone = zone_new_small(type);
 		if (!zone)
 			return (NULL);
 		block = zone->blocks;
@@ -62,26 +77,47 @@ void	*heap_alloc(size_t size, size_t align)
 	return (block_data(block));
 }
 
+// One empty zone per type is kept to avoid mmap/munmap ping-pong
+static void	release_if_empty(t_zone *zone)
+{
+	t_zone	**spare;
+
+	if (!zone->blocks->free || zone->blocks->next)
+		return ;
+	spare = &g_heap.spare[zone->type];
+	if (!*spare || *spare == zone)
+	{
+		*spare = zone;
+		return ;
+	}
+	freelist_remove(zone->blocks, zone->type);
+	zone_release(zone);
+}
+
+// Merges with the free neighbours on both sides, then lists the result once
 void	heap_free(t_loc *loc)
 {
 	t_block	*block;
+	t_type	type;
 
-	block = loc->block;
 	if (loc->zone->type == LARGE)
 	{
 		zone_release(loc->zone);
 		return ;
 	}
+	block = loc->block;
+	type = loc->zone->type;
 	if (g_heap.opts & OPT_SCRIBBLE)
 		ft_memset(block_data(block), SCRIBBLE_FREE, block->size);
 	block->free = 1;
-	freelist_push(block, loc->zone->type);
-	block_merge(block, loc->zone->type);
+	block_merge(block, type);
 	if (loc->prev && loc->prev->free)
-		block_merge(loc->prev, loc->zone->type);
-	if (zone_is_reclaimable(loc->zone))
 	{
-		freelist_remove(loc->zone->blocks, loc->zone->type);
-		zone_release(loc->zone);
+		freelist_remove(loc->prev, type);
+		loc->prev->size += sizeof(t_block) + block->size;
+		loc->prev->next = block->next;
+		block = loc->prev;
 	}
+	freelist_push(block, type);
+	release_if_empty(loc->zone);
 }

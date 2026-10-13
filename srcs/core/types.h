@@ -10,6 +10,8 @@
 # define TINY_MAX 128
 # define SMALL_MAX 1024
 # define MIN_ALLOCS 100
+// One free list per 16-byte size, the last one holds every larger block
+# define BIN_COUNT 65
 
 # define HISTORY_SIZE 64
 
@@ -62,7 +64,6 @@ typedef struct s_link
 
 typedef struct s_zone
 {
-	struct s_zone		*next;
 	size_t				size;
 	t_type				type;
 	t_block				*blocks;
@@ -83,10 +84,14 @@ typedef struct s_event
 	size_t				size;
 }						t_event;
 
+// zones is sorted by address so lookups can use a binary search
 typedef struct s_heap
 {
-	t_zone				*zones;
-	t_block				*bins[2];
+	t_zone				**zones;
+	size_t				count;
+	size_t				capacity;
+	t_zone				*spare[2];
+	t_block				*bins[2][BIN_COUNT];
 	size_t				page_size;
 	int					opts;
 	size_t				events;

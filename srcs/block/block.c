@@ -29,8 +29,8 @@ void	block_split(t_block *block, size_t size, t_type type)
 	rest->next = block->next;
 	block->next = rest;
 	block->size = size;
-	freelist_push(rest, type);
 	block_merge(rest, type);
+	freelist_push(rest, type);
 }
 
 void	block_merge(t_block *block, t_type type)

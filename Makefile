@@ -6,7 +6,7 @@ NAME		= libft_malloc_$(HOSTTYPE).so
 LINK		= libft_malloc.so
 
 CC			= cc
-CFLAGS		= -Wall -Wextra -Werror -fPIC -fno-stack-protector
+CFLAGS		= -Wall -Wextra -Werror -O2 -fPIC -fno-stack-protector -fno-builtin
 LDFLAGS		= -shared
 LDLIBS		= -lpthread
 
@@ -16,13 +16,14 @@ OBJ_DIR		= build
 
 SRCS		= core/globals.c			\
 			  core/heap.c				\
+			  core/lookup.c			\
 			  api/malloc.c				\
 			  api/free.c				\
 			  api/realloc.c				\
 			  api/calloc.c				\
 			  api/memalign.c			\
 			  zone/zone.c				\
-			  zone/zone_list.c			\
+			  zone/zone_table.c			\
 			  block/block.c				\
 			  block/freelist.c			\
 			  show/show_alloc_mem.c		\
@@ -52,7 +53,7 @@ clean:
 	rm -rf $(OBJ_DIR)
 
 fclean: clean
-	rm -rf $(NAME) $(LINK)
+	rm -f libft_malloc_*.so $(LINK)
 
 re: fclean all
 

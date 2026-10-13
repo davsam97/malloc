@@ -68,28 +68,25 @@ static void	show_history(void)
 
 void	show_alloc_mem_ex(void)
 {
-	t_zone	*zone;
+	size_t	i;
 	size_t	used;
 	size_t	unused;
-	size_t	zones;
 
 	pthread_mutex_lock(&g_mutex);
 	used = 0;
 	unused = 0;
-	zones = 0;
-	zone = g_heap.zones;
-	while (zone)
+	i = 0;
+	while (i < g_heap.count)
 	{
-		show_zone_ex(zone, &used, &unused);
-		zones++;
-		zone = zone->next;
+		show_zone_ex(g_heap.zones[i], &used, &unused);
+		i++;
 	}
 	ft_putstr_fd("Total : ", 1);
 	ft_putnbr_fd(used, 1);
 	ft_putstr_fd(" bytes used, ", 1);
 	ft_putnbr_fd(unused, 1);
 	ft_putstr_fd(" bytes free, ", 1);
-	ft_putnbr_fd(zones, 1);
+	ft_putnbr_fd(g_heap.count, 1);
 	ft_putstr_fd(" zones\n", 1);
 	show_history();
 	pthread_mutex_unlock(&g_mutex);

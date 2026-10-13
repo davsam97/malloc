@@ -22,34 +22,9 @@ t_type	type_of(size_t size)
 	return (LARGE);
 }
 
-size_t	zone_capacity(t_type type)
-{
-	size_t	max;
-
-	max = TINY_MAX;
-	if (type == SMALL)
-		max = SMALL_MAX;
-	return (align_up(sizeof(t_zone) + MIN_ALLOCS * (sizeof(t_block) + max),
-			g_heap.page_size));
-}
-
-// Sorted by address for show_alloc_mem
-static void	zone_insert(t_zone *zone)
-{
-	t_zone	**cur;
-
-	cur = &g_heap.zones;
-	while (*cur && (char *)*cur < (char *)zone)
-		cur = &(*cur)->next;
-	zone->next = *cur;
-	*cur = zone;
-}
-
-// The caller takes the block, so it is not put on the free list
-t_zone	*zone_new(t_type type, size_t total, size_t offset)
+t_zone	*zone_new(t_type type, size_t total)
 {
 	t_zone	*zone;
-	t_block	*block;
 
 	zone = mmap(NULL, total, PROT_READ | PROT_WRITE,
 			MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
@@ -57,11 +32,45 @@ t_zone	*zone_new(t_type type, size_t total, size_t offset)
 		return (NULL);
 	zone->type = type;
 	zone->size = total;
-	block = (t_block *)((char *)zone + offset);
-	block->size = total - offset - sizeof(t_block);
+	zone->blocks = NULL;
+	if (!zone_table_add(zone))
+	{
+		munmap(zone, total);
+		return (NULL);
+	}
+	return (zone);
+}
+
+// Holds MIN_ALLOCS blocks of the type's largest size, rounded to pages.
+// The header is aligned so every payload is. The caller takes the single
+// free block, so it is not put on the free list.
+t_zone	*zone_new_small(t_type type)
+{
+	size_t	header;
+	size_t	max;
+	size_t	total;
+	t_zone	*zone;
+	t_block	*block;
+
+	header = align_up(sizeof(t_zone), ALIGNMENT);
+	max = TINY_MAX;
+	if (type == SMALL)
+		max = SMALL_MAX;
+	total = align_up(header + MIN_ALLOCS * (sizeof(t_block) + max),
+			g_heap.page_size);
+	zone = zone_new(type, total);
+	if (!zone)
+		return (NULL);
+	block = (t_block *)((char *)zone + header);
+	block->size = total - header - sizeof(t_block);
 	block->free = 1;
 	block->next = NULL;
 	zone->blocks = block;
-	zone_insert(zone);
 	return (zone);
+}
+
+void	zone_release(t_zone *zone)
+{
+	zone_table_remove(zone);
+	munmap(zone, zone->size);
 }

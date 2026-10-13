@@ -5,9 +5,11 @@
 
 size_t	align_up(size_t n, size_t align);
 t_type	type_of(size_t size);
-size_t	zone_capacity(t_type type);
-t_zone	*zone_new(t_type type, size_t total, size_t offset);
+t_zone	*zone_new(t_type type, size_t total);
+t_zone	*zone_new_small(t_type type);
 void	zone_release(t_zone *zone);
-int		zone_is_reclaimable(t_zone *zone);
+t_zone	*zone_of(void *ptr);
+int		zone_table_add(t_zone *zone);
+void	zone_table_remove(t_zone *zone);
 
 #endif

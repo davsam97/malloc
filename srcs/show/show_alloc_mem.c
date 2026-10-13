@@ -55,16 +55,16 @@ static size_t	show_zone(t_zone *zone)
 
 void	show_alloc_mem(void)
 {
-	t_zone	*zone;
+	size_t	i;
 	size_t	total;
 
 	pthread_mutex_lock(&g_mutex);
 	total = 0;
-	zone = g_heap.zones;
-	while (zone)
+	i = 0;
+	while (i < g_heap.count)
 	{
-		total += show_zone(zone);
-		zone = zone->next;
+		total += show_zone(g_heap.zones[i]);
+		i++;
 	}
 	ft_putstr_fd("Total : ", 1);
 	ft_putnbr_fd(total, 1);
