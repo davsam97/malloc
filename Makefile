@@ -49,8 +49,11 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 
 bonus: all
 
+test:
+	sh tests/correction.sh
+
 clean:
-	rm -rf $(OBJ_DIR)
+	rm -rf $(OBJ_DIR) tests/bin
 
 fclean: clean
 	rm -f libft_malloc_*.so $(LINK)
@@ -59,4 +62,4 @@ re: fclean all
 
 -include $(DEPS)
 
-.PHONY: all bonus clean fclean re
+.PHONY: all bonus test clean fclean re

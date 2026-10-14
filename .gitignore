@@ -1,2 +1,3 @@
 build/
 *.so
+tests/bin/
