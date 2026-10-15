@@ -72,7 +72,7 @@ void	*heap_alloc(size_t size, size_t align)
 		return (NULL);
 	block->free = 0;
 	block->req = size;
-	if (g_heap.opts & OPT_SCRIBBLE)
+	if (g_heap.scribble)
 		ft_memset(block_data(block), SCRIBBLE_ALLOC, block->req);
 	return (block_data(block));
 }
@@ -107,7 +107,7 @@ void	heap_free(t_loc *loc)
 	}
 	block = loc->block;
 	type = loc->zone->type;
-	if (g_heap.opts & OPT_SCRIBBLE)
+	if (g_heap.scribble)
 		ft_memset(block_data(block), SCRIBBLE_FREE, block->size);
 	block->free = 1;
 	block_merge(block, type);

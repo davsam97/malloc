@@ -35,7 +35,7 @@ void	*heap_realloc(t_loc *loc, size_t size)
 	old_req = loc->block->req;
 	if (resize_in_place(loc, size, payload_size(size)))
 	{
-		if ((g_heap.opts & OPT_SCRIBBLE) && size > old_req)
+		if (g_heap.scribble && size > old_req)
 			ft_memset((char *)old + old_req, SCRIBBLE_ALLOC, size - old_req);
 		loc->block->req = size;
 		return (old);

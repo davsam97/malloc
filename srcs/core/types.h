@@ -15,11 +15,6 @@
 
 # define HISTORY_SIZE 64
 
-# define OPT_SCRIBBLE 1
-# define OPT_VERBOSE 2
-# define OPT_CHECK 4
-# define OPT_ABORT 8
-
 # define SCRIBBLE_ALLOC 0xAA
 # define SCRIBBLE_FREE 0x55
 
@@ -85,6 +80,8 @@ typedef struct s_event
 }						t_event;
 
 // zones is sorted by address so lookups can use a binary search
+// scribble, verbose, check: debug options read from the environment
+// (check: 0 off, 1 report errors, 2 report and abort)
 typedef struct s_heap
 {
 	t_zone				**zones;
@@ -93,7 +90,9 @@ typedef struct s_heap
 	t_zone				*spare[2];
 	t_block				*bins[2][BIN_COUNT];
 	size_t				page_size;
-	int					opts;
+	int					scribble;
+	int					verbose;
+	int					check;
 	size_t				events;
 	t_event				history[HISTORY_SIZE];
 }						t_heap;

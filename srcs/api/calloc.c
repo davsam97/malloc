@@ -14,7 +14,7 @@ void	*calloc(size_t nmemb, size_t size)
 		return (NULL);
 	total = nmemb * size;
 	ptr = locked_alloc(total, ALIGNMENT, OP_CALLOC);
-	if (ptr && (type_of(total) != LARGE || g_heap.opts & OPT_SCRIBBLE))
+	if (ptr && (type_of(total) != LARGE || g_heap.scribble))
 		ft_memset(ptr, 0, total);
 	return (ptr);
 }

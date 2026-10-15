@@ -47,7 +47,7 @@ void	event_record(t_op op, void *ptr, void *old, size_t size)
 	event->old = old;
 	event->size = size;
 	g_heap.events++;
-	if (g_heap.opts & OPT_VERBOSE)
+	if (g_heap.verbose)
 	{
 		ft_putstr_fd("[ft_malloc] ", 2);
 		event_print(event, 2);
@@ -56,7 +56,7 @@ void	event_record(t_op op, void *ptr, void *old, size_t size)
 
 void	report_invalid(const char *func, void *ptr, t_lookup status)
 {
-	if (!(g_heap.opts & OPT_CHECK))
+	if (g_heap.check == 0)
 		return ;
 	ft_putstr_fd("[ft_malloc] *** error in ", 2);
 	ft_putstr_fd(func, 2);
@@ -68,6 +68,6 @@ void	report_invalid(const char *func, void *ptr, t_lookup status)
 		ft_putstr_fd("): pointer is not the start of a block\n", 2);
 	else
 		ft_putstr_fd("): pointer was not allocated by malloc\n", 2);
-	if (g_heap.opts & OPT_ABORT)
+	if (g_heap.check >= 2)
 		abort();
 }

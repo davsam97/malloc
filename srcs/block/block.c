@@ -16,6 +16,16 @@ size_t	payload_size(size_t size)
 	return (align_up(size, ALIGNMENT));
 }
 
+void	block_merge(t_block *block, t_type type)
+{
+	while (block->next && block->next->free)
+	{
+		freelist_remove(block->next, type);
+		block->size += sizeof(t_block) + block->next->size;
+		block->next = block->next->next;
+	}
+}
+
 // Splits only if the remainder can hold another block
 void	block_split(t_block *block, size_t size, t_type type)
 {
@@ -31,14 +41,4 @@ void	block_split(t_block *block, size_t size, t_type type)
 	block->size = size;
 	block_merge(rest, type);
 	freelist_push(rest, type);
-}
-
-void	block_merge(t_block *block, t_type type)
-{
-	while (block->next && block->next->free)
-	{
-		freelist_remove(block->next, type);
-		block->size += sizeof(t_block) + block->next->size;
-		block->next = block->next->next;
-	}
 }

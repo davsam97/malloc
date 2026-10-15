@@ -3,10 +3,20 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+// Divides by 2 until odd: only powers of two end up at exactly 1
+static int	is_power_of_two(size_t n)
+{
+	if (n == 0)
+		return (0);
+	while (n % 2 == 0)
+		n /= 2;
+	return (n == 1);
+}
+
 // Replaced so that libc never hands out its own pointers
 void	*memalign(size_t alignment, size_t size)
 {
-	if (alignment == 0 || (alignment & (alignment - 1)))
+	if (!is_power_of_two(alignment))
 		return (NULL);
 	if (alignment < ALIGNMENT)
 		alignment = ALIGNMENT;
@@ -17,11 +27,11 @@ int	posix_memalign(void **memptr, size_t alignment, size_t size)
 {
 	void	*ptr;
 
-	if (alignment % sizeof(void *) || (alignment & (alignment - 1)))
+	if (alignment % sizeof(void *) || !is_power_of_two(alignment))
 		return (EINVAL);
 	ptr = memalign(alignment, size);
 	if (!ptr)
-		return (ENOMEM);
+		return (EINVAL);
 	*memptr = ptr;
 	return (0);
 }

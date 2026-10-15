@@ -5,7 +5,7 @@
 t_heap			g_heap;
 pthread_mutex_t	g_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-// FT_MALLOC_SCRIBBLE, FT_MALLOC_VERBOSE, FT_MALLOC_CHECK (1: report, 2: abort)
+// Returns the first digit of the variable, 0 if unset or not a digit
 static int	env_level(const char *name)
 {
 	char	*value;
@@ -19,21 +19,14 @@ static int	env_level(const char *name)
 void	heap_init(void)
 {
 	long	page_size;
-	int		check;
 
 	if (g_heap.page_size)
 		return ;
 	page_size = sysconf(_SC_PAGESIZE);
 	if (page_size <= 0)
 		page_size = 4096;
-	if (env_level("FT_MALLOC_SCRIBBLE"))
-		g_heap.opts |= OPT_SCRIBBLE;
-	if (env_level("FT_MALLOC_VERBOSE"))
-		g_heap.opts |= OPT_VERBOSE;
-	check = env_level("FT_MALLOC_CHECK");
-	if (check >= 1)
-		g_heap.opts |= OPT_CHECK;
-	if (check >= 2)
-		g_heap.opts |= OPT_ABORT;
+	g_heap.scribble = env_level("FT_MALLOC_SCRIBBLE");
+	g_heap.verbose = env_level("FT_MALLOC_VERBOSE");
+	g_heap.check = env_level("FT_MALLOC_CHECK");
 	g_heap.page_size = (size_t)page_size;
 }
