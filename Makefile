@@ -6,8 +6,8 @@ NAME		= libft_malloc_$(HOSTTYPE).so
 LINK		= libft_malloc.so
 
 CC			= cc
-CFLAGS		= -Wall -Wextra -Werror -O2 -fPIC -fno-stack-protector -fno-builtin
-LDFLAGS		= -shared
+CFLAGS		= -Wall -Wextra -Werror -O2 -fPIC -fno-builtin
+LDFLAGS		= -shared -Wl,--version-script=exports.map
 LDLIBS		= -lpthread
 
 INC_DIR		= includes
@@ -16,7 +16,7 @@ OBJ_DIR		= build
 
 SRCS		= core/globals.c			\
 			  core/heap.c				\
-			  core/lookup.c			\
+			  core/lookup.c				\
 			  api/malloc.c				\
 			  api/free.c				\
 			  api/realloc.c				\
@@ -40,8 +40,9 @@ all: $(LINK)
 $(LINK): $(NAME)
 	ln -sf $(NAME) $(LINK)
 
-$(NAME): $(OBJS)
+$(NAME): $(OBJS) exports.map
 	$(CC) $(LDFLAGS) -o $@ $(OBJS) $(LDLIBS)
+	strip --discard-all $@
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	@mkdir -p $(dir $@)
@@ -56,7 +57,7 @@ clean:
 	rm -rf $(OBJ_DIR) tests/bin
 
 fclean: clean
-	rm -f libft_malloc_*.so $(LINK)
+	rm -rf libft_malloc*.so $(LINK)
 
 re: fclean all
 

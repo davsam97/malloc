@@ -1,3 +1,13 @@
+# Build outputs
 build/
 *.so
+*.o
+*.d
+*.a
+
+# Test binaries
 tests/bin/
+
+# Local only
+cc/
+readex.md

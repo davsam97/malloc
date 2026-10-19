@@ -1,0 +1,17 @@
+{
+	global:
+		malloc;
+		free;
+		realloc;
+		show_alloc_mem;
+		show_alloc_mem_ex;
+		calloc;
+		reallocarray;
+		malloc_usable_size;
+		memalign;
+		posix_memalign;
+		aligned_alloc;
+		valloc;
+	local:
+		*;
+};
